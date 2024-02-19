@@ -40,7 +40,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             print("failed to decode")
         print(json_data['text'])
         for word in Moderator.black_list:
-            if word in json_data['text']:
+            if word in json_data['text'].lower():
                 sender_id = json_data['sender_id']
                 group_id = json_data['group_id']
                 userid = Moderator.get_userid(group_id, sender_id)
