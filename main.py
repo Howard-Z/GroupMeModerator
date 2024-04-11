@@ -28,24 +28,39 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
 
-        # Decode the post data
-        post_data_decoded = post_data.decode('utf-8')
+        
+        
 
         # Parse the JSON data
         try:
+            # Decode the post data
+            post_data_decoded = post_data.decode('utf-8')
             json_data = json.loads(post_data_decoded)
+            sender_id = json_data['sender_id']
+            group_id = json_data['group_id']
+            user_id = Moderator.get_userid(group_id, sender_id)
+            
+            print("sender id: ", sender_id)
+            print("group id: ", group_id)
+            print("user id: ", user_id)
+            print("scanning: ", json_data['text'], " for")
+            # print(type(json_data['text'].lower()))
+            for word in Moderator.black_list:
+                print("trying type ", type(word), ": ", word)
+                print("against type ",type(json_data['text'].lower()), ": ", json_data['text'].lower())
+                if word in json_data['text'].lower():
+                    print("matched!")
+                    Moderator.kick(group_id, user_id)
+                    Moderator.say_funny()
+                else:
+                    print("no match")
+                    
             # Print the parsed JSON data
-        except json.JSONDecodeError as e:
+        except:
             # If JSON parsing fails, print an error message
-            print("failed to decode")
-        print(json_data['text'])
-        for word in Moderator.black_list:
-            if word in json_data['text'].lower():
-                sender_id = json_data['sender_id']
-                group_id = json_data['group_id']
-                userid = Moderator.get_userid(group_id, sender_id)
-                Moderator.kick(group_id, userid)
-                Moderator.say_funny()
+            print("failed to decode or something")
+            pass
+        
 
 
 
@@ -69,7 +84,13 @@ class Moderator():
         f = open(path, "r")
         Moderator.black_list = set()
         for word in f:
+            if word[-1] == "\n":
+                word = word[:-1]
+            if word == "":
+                continue
             Moderator.black_list.add(word)
+        print("loaded blacklist of: ")
+        print(Moderator.black_list)
 
 
     @staticmethod
